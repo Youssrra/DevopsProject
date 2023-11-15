@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  5SAE6-G9-KADDEM:
+    container_name: 5SAE6-G9-KADDEM
+    build: 5SAE6-G9-KADDEM
+    ports:
+      - "8090:8089"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db-mysql:3306/khaddemApp?createDatabaseIfNotExist=true&useSSL=false&max_allowed_packet=15728640
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+    image: "kaddem"
+    restart: unless-stopped
+    depends_on:
+      - db-mysql
+      - sonarqube
+      - nexus
+
+  db-mysql:
+    image: "mysql:latest"
+    container_name: db-mysql  
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "3307:3306"
+    restart: unless-stopped
+
+  sonarqube:
+    image: "sonarqube:8.9.7-community"
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube-data:/sonarqube/data
+
+  nexus:
+    image: "sonatype/nexus3"
+    container_name: nexus
+    ports:
+      - "8081:8081"
+    volumes:
+      - nexus_data:/nexus-data
+
+volumes:
+  sonarqube-data:
+  nexus_data:

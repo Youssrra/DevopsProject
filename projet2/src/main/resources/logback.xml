@@ -1,0 +1,16 @@
+<configuration>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <logger name="tn.esprit.spring.kaddem.controllers.UniversiteRestController" level="DEBUG"/>
+    <logger name="tn.esprit.spring.kaddem.controllers.UniversiteRestController" level="INFO"/>
+    <logger name="tn.esprit.spring.kaddem.controllers.UniversiteRestController" level="ERROR"/>
+    <logger name="tn.esprit.spring.kaddem.controllers.UniversiteRestController" level="WARN"/>
+</configuration>

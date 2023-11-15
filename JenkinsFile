@@ -1,0 +1,203 @@
+pipeline {
+    agent any
+
+
+    stages {
+
+        stage('Récupération du code') {
+
+            steps {
+                script {
+                    git branch: 'main',
+                    credentialsId: '82302470-9236-499e-9c2b-3f9df1e4eb7f',
+                    url: 'https://github.com/Youssrra/DevopsProject.git'
+                }
+            }
+        }
+
+        stage('Nettoyage et Compilation') {
+
+            steps {
+                dir('projet2') {
+                    sh 'mvn clean compile'
+                }
+            }
+
+            // Ajoutez l'étape post-build pour l'envoi d'e-mails ici
+        post {
+            success {
+                emailext subject: "Succès de la construction",
+                          body: "La construction a réussi. Aucune action requise.",
+                          to: 'email@gmail.com'
+            }
+            failure {
+                emailext subject: "Échec de la construction",
+                          body: "La construction a échoué. Veuillez vérifier les détails de la construction.",
+                          to: 'email@gmail.com'
+            }
+        }
+        // Fin de l'étape post-build
+
+        }
+
+    stage('Tests unitaires avec Mocks') {
+
+            steps {
+                dir('projet2') {
+                    sh 'mvn test'
+                }
+            }
+
+
+            // Ajoutez l'étape post-build pour l'envoi d'e-mails ici
+        post {
+            success {
+                emailext subject: "Succès de l'exexution des test unitaire",
+                          body: "L'execution des test unitaire a réussi. Aucune action requise.",
+                          to: 'email@gmail.com'
+            }
+            failure {
+                emailext subject: "Échec de l'execution des test unitaire",
+                          body: "L'execution des test unitaire a échoué. Veuillez vérifier les détails de la construction.",
+                          to: 'email@gmail.com'
+            }
+        }
+        // Fin de l'étape post-build
+
+
+        }
+
+       stage('SonarQube Analysis') {
+
+            steps {
+                dir('projet2') {
+                    script {
+                        sh 'mvn sonar:sonar -Dsonar.projectKey=Yousra_ABID_5SAE6_Kaddem -Dsonar.host.url=http://192.168.33.10:9000 -Dsonar.login=775086d4b8d99b30af408c5e73750ef75daabe59 -Dsonar.scm.enabled=true'
+                    }
+                }
+            }
+              // Ajoutez l'étape post-build pour l'envoi d'e-mails ici
+        post {
+            success {
+                emailext subject: "Succès de l'analyse avec SonarQube",
+                          body: "L'analyse avec SonarQube a réussi. Aucune action requise.",
+                          to: 'email@gmail.com'
+            }
+            failure {
+                emailext subject: "Échec de l'analyse avec SonarQube",
+                          body: "L'analyse avec SonarQube a échoué. Veuillez vérifier les détails de la construction.",
+                          to: 'email@gmail.com'
+            }
+        }
+        // Fin de l'étape post-build
+
+        }
+
+         stage('Arrêt de SonarQube Docker') {
+            steps {
+                script {
+                    sh 'docker stop sonarqube'
+                }
+            }
+        }
+
+
+        stage('Nexus Deployment') {
+            steps {
+                dir('projet2') {
+                    sh 'mvn deploy -DskipTests -Dmaven.compile.fork=true'
+                }
+            }
+
+                          // Ajoutez l'étape post-build pour l'envoi d'e-mails ici
+        post {
+            success {
+                emailext subject: "Succès du deploiment avec nexus",
+                          body: "Le deploiment de l'application avec nexus a réussi. Aucune action requise.",
+                          to: 'email@gmail.com'
+            }
+            failure {
+                emailext subject: "Échec du deploiment avec nexus",
+                          body: "Le deploiment de l'application avec nexus  a échoué. Veuillez vérifier les détails de la construction.",
+                          to: 'email@gmail.com'
+            }
+        }
+        // Fin de l'étape post-build
+
+        }
+
+         stage('Arrêt de Nexus Docker') {
+            steps {
+                script {
+                    sh 'docker stop nexus'
+                }
+            }
+        }
+
+       stage('Nettoyage et Instalation') {
+            steps {
+                dir('projet2') {
+                    sh 'mvn clean install'
+                }
+            }
+        }
+
+        stage('Docker Hub') {
+            steps {
+          dir('projet2') {
+              echo 'Logging in to Docker Hub with a token...'
+                sh 'echo doker_token| docker login -u doker_username --password-stdin'
+
+                echo 'Building the Docker image...'
+                sh 'docker build -t doker_username/kaddem:1.0.0 .'
+
+                echo 'Pushing the Docker image to Docker Hub...'
+                sh 'docker push doker_username/kaddem:1.0.0'
+          }
+            }
+
+            // Ajoutez l'étape post-build pour l'envoi d'e-mails ici
+        post {
+            success {
+                emailext subject: "Succès dockerization du projet",
+                          body: "La dockerization de l'application a réussi consulter votre docker Hub. Aucune action requise.",
+                          to: 'email@gmail.com'
+            }
+            failure {
+                emailext subject: "Échec dockerization du projet",
+                          body: "Le dockerization de l'application a échoué. Veuillez vérifier les détails de la construction.",
+                          to: 'email@gmail.com'
+            }
+        }
+        // Fin de l'étape post-build
+
+        }
+
+
+ stage('Exécution de Docker Compose') {
+     steps {
+script {
+            def dockerComposePath = "${env.WORKSPACE}/docker-compose.yml"
+            sh "docker-compose -f ${dockerComposePath} up -d"
+        }
+     }
+
+      // Ajoutez l'étape post-build pour l'envoi d'e-mails ici
+        post {
+            success {
+                emailext subject: "Succès Contenerization du projet",
+                          body: "La Contenerization de l'application (kaddem,mysql) a réussi . Aucune action requise.",
+                          to: 'email@gmail.com'
+            }
+            failure {
+                emailext subject: "Échec Contenerization du projet",
+                          body: "La Contenerization de l'application a échoué. Veuillez vérifier les détails de la construction.",
+                          to: 'email@gmail.com'
+            }
+        }
+        // Fin de l'étape post-build
+}
+
+
+    }
+}
